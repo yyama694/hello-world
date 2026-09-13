@@ -42,7 +42,11 @@ Claude Codeはセッションをまたいだ記憶を持たないため、作業
   - 移動先: `C:\dev\hello-world`(旧パス `C:\01_fukuchi\...\08_ociにデプロイ` から `CLAUDE.md`, `pom.xml`, `.gitignore`, `src` を移動。`target`はビルド生成物のため削除し、`mvn clean package`で再生成する)
   - 今後複数のWebアプリを作る際は `C:\dev\<プロジェクト名>` 配下にそれぞれ1フォルダ・1Gitリポジトリで作成する方針とする(詳細は下記「ローカル開発ディレクトリ構成の方針」を参照)
 - [x] 移動後の動作再確認 → `C:\dev\hello-world` で `mvn clean package` → jar実行、および `mvn spring-boot:run` の両方が正常に動作することを確認(`curl http://localhost:8080/` で「Hello World」表示を確認)。**日本語パスが原因だったことが実証され、問題は完全に解消**。確認後プロセスは停止済み。
-- [ ] git初期化 + GitHubリポジトリ作成・連携
+- [x] git初期化 + GitHubリポジトリ作成・連携
+  - GitHub CLI(`gh`)をwingetでインストールし、ブラウザOAuthでログイン(アカウント: `yyama694`)
+  - ローカルで`git init` → 初回コミット(このリポジトリのみに`user.name`/`user.email`をローカル設定。グローバルgit設定は変更していない)
+  - `gh repo create hello-world --public --source=. --remote=origin --push` でGitHub上にリポジトリ作成とpushを実行
+  - リポジトリURL: https://github.com/yyama694/hello-world (Public)
 - [ ] OCI Compute Instance(Always Free)の作成
 - [ ] VM上にJava 21実行環境・PostgreSQLをセットアップ
 - [ ] jarをVMに転送し、systemdサービスとして常駐化
