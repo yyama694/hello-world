@@ -12,6 +12,7 @@
   3. これは通常のセッションの「大きな変更は確認してから」という基準よりも粒度を細かくしたもの — 1つ1つの作業ステップ(例: `git init`を打つ、1つのファイルを作る、1つのコマンドを実行する)ごとに区切って確認を取る。
 - 専門用語が出た際に簡単な補足を添える方針(グローバルCLAUDE.md)は本プロジェクトでも引き続き適用する。
 - **例外**: `CLAUDE.md`など`.md`ファイルへの進捗状況の記入・更新は、事前確認なしで行ってよい(2026-09-13にユーザーから明示指示)。実際のコード変更・コマンド実行・git操作・外部サービスへの操作(GitHubへのpushなど)は引き続き事前説明+確認を行う。
+- **確認の形式**: 「進めてよいか」の確認は、自由入力(「よいです」等)を求める平文の質問ではなく、選択肢から選べる形式(AskUserQuestion)で行う(2026-09-13にユーザーから明示指示。選択の方がエンター一つで済み楽なため)。
 - 慣れてきて「もう確認は不要」といった指示があれば、その時点でこのセクションを更新する。
 
 ## ローカル開発ディレクトリ構成の方針(今後複数アプリを作る前提)
@@ -48,8 +49,19 @@ Claude Codeはセッションをまたいだ記憶を持たないため、作業
   - ローカルで`git init` → 初回コミット(このリポジトリのみに`user.name`/`user.email`をローカル設定。グローバルgit設定は変更していない)
   - `gh repo create hello-world --public --source=. --remote=origin --push` でGitHub上にリポジトリ作成とpushを実行
   - リポジトリURL: https://github.com/yyama694/hello-world (Public)
-- [ ] OCI Compute Instance(Always Free)の作成
-- [ ] VM上にJava 21実行環境・PostgreSQLをセットアップ
+- [x] OCI Compute Instance(Always Free)の作成
+  - リージョン: 東京(ap-tokyo-1)
+  - 当初 VM.Standard.A1.Flex(Ampere)を試みたが "Out of host capacity" エラーで作成不可 → **VM.Standard.E2.1.Micro** に変更して作成成功
+  - SSH鍵: ローカルで新規生成した鍵ペアを使用(秘密鍵 `C:\Users\Norio Fukuchi\.ssh\oci_hello_world`、公開鍵をインスタンス作成時に貼り付け)
+  - ネットワーク: インスタンス作成時に新規VCN・パブリックサブネットを自動作成(「Create new virtual cloud network」を選択)
+  - パブリックIP: 作成直後は未割り当てだったため、VNIC詳細 → IP administration → Edit Private IP Address から「Ephemeral public IP」を手動割り当て
+  - **パブリックIPアドレス: `140.245.83.216`**
+- [ ] VM上にJava 21実行環境・PostgreSQLをセットアップ(**作業中断中、以下の状況から再開する**)
+  - SSH接続自体は成功していた(`ssh -i ~/.ssh/oci_hello_world opc@140.245.83.216`、ユーザー名`opc`、OS: Oracle Linux Server 9.8)
+  - **既知の問題**: `VM.Standard.E2.1.Micro`(OCPU 1/8・メモリ1GB)は非常にスペックが小さく、`dnf list available`/`dnf search`/`dnf install`などdnf操作でCPU・メモリを使い切り、VMがSSH含めて完全に無応答になる事象が複数回発生した。原因は複数のdnfコマンドを同時に実行してしまったこと、および1GBという少ないメモリでrpmメタデータ処理が重いこと。
+  - 無応答になった際はOCIコンソールの「Instance actions」→「Reboot」で復旧できた(SSH再接続可能な状態に戻る)。
+  - **対応方針**: 今後はdnf経由でのインストールは避け、**Amazon Corretto 21のtar.gzを直接ダウンロードして`/opt`配下に展開する方式**に切り替える(rpm/dnfのメタデータ処理による負荷を回避するため)。また、VM上のコマンドは同時に複数実行せず、1つずつ順番に実行し完了を確認してから次に進む。
+  - **現在の状態**: 2回目のReboot実行を依頼したところで作業を中断。次回再開時は、まずSSH接続確認 → tar.gz方式でのJavaインストールから着手する。
 - [ ] jarをVMに転送し、systemdサービスとして常駐化
 - [ ] パブリックIP+ポート開放設定を行い、ブラウザから外部アクセスできることを確認
 
